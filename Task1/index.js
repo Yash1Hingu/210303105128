@@ -7,11 +7,22 @@ const WINDOW_SIZE = 10;
 const EXTERNAL_API_URL = 'http://20.244.56.144/test';
 const TIMEOUT = 500;
 let numbersWindow = [];
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJNYXBDbGFpbXMiOnsiZXhwIjoxNzE4Nzc3OTg4LCJpYXQiOjE3MTg3Nzc2ODgsImlzcyI6IkFmZm9yZG1lZCIsImp0aSI6ImUxZGRmNzZmLTc0ZmYtNDhiYy04MjExLWUwMTg5YjEzOGNjZiIsInN1YiI6IjIxMDMwMzEwNTEyOEBwYXJ1bHVuaXZlcnNpdHkuYWMuaW4ifSwiY29tcGFueU5hbWUiOiJ5YXNoTWFydCIsImNsaWVudElEIjoiZTFkZGY3NmYtNzRmZi00OGJjLTgyMTEtZTAxODliMTM4Y2NmIiwiY2xpZW50U2VjcmV0IjoieXRvS1pUbkdnbXBkbU9ncyIsIm93bmVyTmFtZSI6Illhc2hIaW5ndSIsIm93bmVyRW1haWwiOiIyMTAzMDMxMDUxMjhAcGFydWx1bml2ZXJzaXR5LmFjLmluIiwicm9sbE5vIjoiMjEwMzAzMTA1MTI4In0.ddK5sFnWkZAqGp5ZoiKv6nei11tOc7Zp2obOVEXYYPk";
+let token = "";
 
+const data = {
+    "companyName": "yashMart",
+    "clientID": "e1ddf76f-74ff-48bc-8211-e0189b138ccf",
+    "clientSecret": "ytoKZTnGgmpdmOgs",
+    "ownerName": "YashHingu",
+    "ownerEmail": "210303105128@paruluniversity.ac.in",
+    "rollNo": "210303105128"
+};
 
 const fetchNumber = async (numberId) => {
     try {
+        const tokenresponse = await axios.post('http://20.244.56.144/test/auth', data);
+        token = tokenresponse.data.access_token;
+        
         const response = await axios.get(`${EXTERNAL_API_URL}/${numberId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
