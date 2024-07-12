@@ -1,25 +1,79 @@
 import { useState, useEffect } from 'react';
-import { Grid, Card, CardContent, Typography, Select, MenuItem, InputLabel, FormControl, TextField } from '@mui/material';
-import { getProducts } from '../services/api';
+import {
+    Card,
+    CardContent,
+    CardMedia,
+    Typography,
+    CardActions,
+    Button,
+    Badge,
+    Box,
+    Chip,
+    Grid,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    TextField,
+    Checkbox,
+    FormControlLabel
+} from '@mui/material';
+import StarIcon from '@mui/icons-material/Star';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import axios from 'axios';
 
-const companies = ["AMZ", "FLP", "SNP", "MYN", "AZO"];
-const categories = ["Phone", "Computer", "TV", "Earphone", "Tablet", "Charger", "Mouse", "Keypad", "Bluetooth", "Pendrive", "Remote", "Speaker", "Headset", "Laptop", "PC"];
+const BASE_URL = 'https://json-server-c67opnddza-el.a.run.app';
 
 const AllProducts = () => {
     const [products, setProducts] = useState([]);
-    const [selectedCompany, setSelectedCompany] = useState('AMZ');
-    const [selectedCategory, setSelectedCategory] = useState('Laptop');
+    const [categories, setCategories] = useState([]);
+    const [companies, setCompanies] = useState([]);
+    const [selectedCompany, setSelectedCompany] = useState('All');
+    const [selectedCategory, setSelectedCategory] = useState('All');
     const [topN, setTopN] = useState(10);
     const [minPrice, setMinPrice] = useState(1);
     const [maxPrice, setMaxPrice] = useState(10000);
 
     useEffect(() => {
+        axios.get(`${BASE_URL}/categories`).then((res) => {
+            const categories = res.data.map(c => c.name);
+            setCategories(["All", ...categories]);
+        })
+        axios.get(`${BASE_URL}/companies`).then((res) => {
+            const companies = res.data.map(c => c.name);
+            setCompanies(["All", ...companies]);
+        })
         fetchProducts();
     }, [selectedCompany, selectedCategory, topN, minPrice, maxPrice]);
 
-    const fetchProducts = async () => {
-        const data = await getProducts(selectedCompany, selectedCategory, topN, minPrice, maxPrice);
-        setProducts(data);
+    const fetchProducts = () => {
+        if (selectedCompany === 'All' && selectedCategory !== 'All') {
+            axios.get(`${BASE_URL}/categories/${selectedCategory}/products?top=${topN}&minPrice=${minPrice}&maxPrice=${maxPrice}`).then((res) => {
+                setProducts(res.data);
+            })
+        } else if (selectedCompany === 'All' && selectedCategory === 'All') {
+            axios.get(`${BASE_URL}/products`).then((res) => {
+                console.log(res.data);
+                setProducts(res.data);
+            })
+        } else if (selectedCompany !== 'All' && selectedCategory !== 'All') {
+            axios.get(`${BASE_URL}/companies/${selectedCompany}/categories/${selectedCategory}/products?top=${topN}&minPrice=${minPrice}&maxPrice=${maxPrice}`).then((res) => {
+                console.log(res.data);
+                setProducts(res.data);
+            })
+        } else if (selectedCompany !== 'All' && selectedCategory === 'All') {
+            axios.get(`${BASE_URL}/companies/${selectedCompany}/products?top=${topN}&minPrice=${minPrice}&maxPrice=${maxPrice}`).then((res) => {
+                console.log(res.data);
+                setProducts(res.data);
+            })
+        }
+        // else {
+        //     axios.get(`${BASE_URL}/${company}/categories/${category}/products`).then((res) => {
+        //         console.log(res.data);
+        //         setProducts(res.data);
+        //     })
+        // }
+
     };
 
     return (
@@ -28,7 +82,7 @@ const AllProducts = () => {
             <FormControl>
                 <InputLabel>Company</InputLabel>
                 <Select value={selectedCompany} onChange={(e) => setSelectedCompany(e.target.value)}>
-                    {companies.map((company) => (
+                    {companies?.map((company) => (
                         <MenuItem key={company} value={company}>
                             {company}
                         </MenuItem>
@@ -38,7 +92,7 @@ const AllProducts = () => {
             <FormControl>
                 <InputLabel>Category</InputLabel>
                 <Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                    {categories.map((category) => (
+                    {categories?.map((category) => (
                         <MenuItem key={category} value={category}>
                             {category}
                         </MenuItem>
@@ -70,19 +124,61 @@ const AllProducts = () => {
                 style={{ margin: '0 10px' }}
             />
             <Grid container spacing={2}>
-                {products.map((product) => (
-                    <Grid item xs={12} sm={6} md={4} key={product.uniqueId}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h5">{product.name}</Typography>
-
-                                <Typography>Price: {product.price}</Typography>
-                                <Typography>Rating: {product.rating}</Typography>
-                                <Typography>Discount: {product.discount}</Typography>
-                                <Typography>Availability: {product.availability ? 'Available' : 'Out of Stock'}</Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                {products.map(({ availability, category, company, discount, price, productName, rating, id }) => (
+                    <Card
+                        key={id}
+                        sx={{ maxWidth: 345, m: 2, position: 'relative', cursor: 'pointer' }}
+                        onClick={() => navigate(`/product/${id}`)}
+                    >
+                        <Badge
+                            badgeContent="Unavailable"
+                            color="error"
+                            invisible={availability !== "no"}
+                            sx={{ position: 'absolute', top: 20, left: 50 }}
+                        />
+                        <CardMedia
+                            component="img"
+                            height="140"
+                            image={`https://picsum.photos/200/300`}
+                            alt={productName}
+                            loading="lazy"
+                        />
+                        <CardContent>
+                            <Typography gutterBottom variant="h5" component="div">
+                                {productName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {category} by {company}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                                <StarIcon sx={{ color: 'gold' }} />
+                                <Typography variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                                    {rating}
+                                </Typography>
+                            </Box>
+                            <Typography variant="h6" component="div" sx={{ mt: 1 }}>
+                                ${price}
+                                {discount > 0 && (
+                                    <Chip
+                                        label={`${discount}% OFF`}
+                                        color="success"
+                                        size="small"
+                                        sx={{ ml: 1 }}
+                                    />
+                                )}
+                            </Typography>
+                        </CardContent>
+                        <CardActions>
+                            <Button
+                                size="small"
+                                color="primary"
+                                startIcon={<ShoppingCartIcon />}
+                                disabled={availability === "no"}
+                            >
+                                Add to Cart
+                            </Button>
+                        </CardActions>
+                    </Card>
                 ))}
             </Grid>
         </div>

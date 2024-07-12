@@ -10,19 +10,21 @@ let numbersWindow = [];
 let token = "";
 
 const data = {
-    "companyName": "yashMart",
-    "clientID": "e1ddf76f-74ff-48bc-8211-e0189b138ccf",
-    "clientSecret": "ytoKZTnGgmpdmOgs",
+    "companyName": "yashmed",
+    "clientID": "dfadd985-f5b0-4fd3-8ff8-9f1945f7604c",
+    "clientSecret": "BjeFqKBrYicbYDfd",
     "ownerName": "YashHingu",
     "ownerEmail": "210303105128@paruluniversity.ac.in",
     "rollNo": "210303105128"
 };
 
+
+
 const fetchNumber = async (numberId) => {
     try {
         const tokenresponse = await axios.post('http://20.244.56.144/test/auth', data);
         token = tokenresponse.data.access_token;
-        
+
         const response = await axios.get(`${EXTERNAL_API_URL}/${numberId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
